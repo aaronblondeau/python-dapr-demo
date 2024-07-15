@@ -1,0 +1,13 @@
+{
+    "cSpell.words": [
+        "actormethod",
+        "dapr",
+        "dotenv",
+        "fastapi",
+        "healthcheck",
+        "healthz",
+        "pydantic",
+        "Remindable",
+        "uvicorn"
+    ]
+}
