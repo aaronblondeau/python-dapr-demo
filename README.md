@@ -2,6 +2,8 @@
 
 Demo app that uses [Dapr](https://dapr.io/) with [FastAPI](https://fastapi.tiangolo.com/).
 
+This is for a blog post : TODO
+
 ## Getting Started
 
 First create a virtual environment, install poetry, and use poetry to install dependencies.

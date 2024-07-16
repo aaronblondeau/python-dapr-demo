@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AirDisplay</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/picnic">
+  <script src="//unpkg.com/alpinejs" defer></script>
+</head>
+<body>
+  <div x-data="airdisplay" style="padding: 20px;">
+    <div style="margin-bottom: 20px;">We have two airplanes named "lightning" and "sparky" that are flying over a beach near you. Messages are displayed for 60 seconds. Wait till shown messages expire before entering yours.</div>
+    <template x-for="banner in banners" :key="banner.id">
+      <article class="card">
+        <header>
+          <h3 x-text="banner.id"></h3>
+        </header>
+        <footer x-show="banner.message">
+          <h1 x-text="banner.message"></h1>
+          <em>Expires at <span x-text="banner.expires"></span></em>
+        </footer>
+        <footer x-show="!banner.message" x-show="!banner.message">
+          <label><input type="text" placeholder="Message" x-model="updates[banner.id]" @keyup.enter="update(banner.id)"></label>
+          <button @click="update(banner.id)">Display</button>
+        </footer>
+      </article>
+    </template>
+    <div x-cloak>
+      Status : 
+      <template x-if="connected">
+        <span>Connected</span>
+      </template>
+      <template x-if="!connected">
+        <span>NOT CONNECTED</span>
+      </template>
+    </div>
+    <div x-cloak>
+      <template x-if="error">
+        <span x-text="error" style="color: red"></span>
+      </template>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('airdisplay', () => ({
+            banners: [],
+            updates: {},
+            error: '',
+            connected: false,
+
+            async update(id) {
+              try {
+                this.error = ''
+                const response = await fetch('/banner/' + id, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                    message: this.updates[id]
+                  })
+                })
+                if (response?.ok) {
+                  this.updates[id] = ''
+                } else {
+                  json = await response.json()
+                  if (json && json.detail) {
+                    this.error = json.detail
+                  } else {
+                    this.error = 'Failed to update message!'
+                  }
+                }
+              } catch (e) {
+                console.error(e)
+                this.error = e.message
+              }
+            },
+
+            async init() {
+              const res = await fetch('/banners')
+              this.banners = await res.json()
+
+              var ws = new WebSocket(`ws://${window.location.host}/ws`)
+              ws.onmessage = (event) => {
+                const newBanners = []
+                console.log(event)
+                const update = JSON.parse(event.data)
+                let found = false
+                for (const banner of this.banners) {
+                  if (banner.id !== update.id) {
+                    newBanners.push(banner)
+                  } else {
+                    found = true
+                    newBanners.push(update)
+                  }
+                }
+                if (!found) {
+                  newBanners.push(update)
+                }
+                this.banners = newBanners
+              }
+              ws.onopen = (event) => {
+                this.connected = true
+                console.log('~~ connected')
+              }
+              ws.onclose = (event) => {
+                this.connected = false
+                console.log('~~ disconnected')
+              }
+            },
+        }))
+    })
+  </script>
+</body>
+</html>
