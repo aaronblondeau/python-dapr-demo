@@ -23,19 +23,21 @@ class BannerActor(Actor, BannerActorInterface, Remindable):
         print(f'~~ Activate {self.__class__.__name__} {self.id}!', flush=True)
 
         # This provides a default state of an empty banner if state is missing
+        # Note that model_dump is used to convert banner state to a dict which dapr can serialize as it passes it around
         state = await self._state_manager.get_or_add_state('banner', Banner(id=self.id.id).model_dump())
         self.banner = Banner.model_validate(state)
         await self.create_clear_reminder()
 
     async def process_state_change(self):
         # Save new state to state store
+        # Note that model_dump is used to transmit state as a serializable dict
         await self._state_manager.set_state('banner', self.banner.model_dump())
 
         # Publish an event with the update
         with DaprClient() as client:
             client.publish_event(
                 pubsub_name='pubsub',
-                topic_name='banner_updated', # self.id.id + '_banner',
+                topic_name='banner_updated',
                 data=self.banner.model_dump_json(),
                 data_content_type='application/json',
             )

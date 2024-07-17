@@ -2,7 +2,7 @@
 
 Demo app that uses [Dapr](https://dapr.io/) with [FastAPI](https://fastapi.tiangolo.com/).
 
-This is for a blog post : TODO
+This is for a blog post : [https://aaronblondeau.com/posts/july_2024/python_dapr/](https://aaronblondeau.com/posts/july_2024/python_dapr/)
 
 ## Getting Started
 
